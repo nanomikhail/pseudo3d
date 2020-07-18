@@ -1,0 +1,124 @@
+set_pixel_size(3)
+scr = get_screen()
+resize(scr, 200, 200)
+
+xsize = get_xsize(scr)
+ysize = get_ysize( scr)
+
+playerX = 42.4 // Spawn x
+playerY = -54.3 // Spawn y
+playerA = -1.6 // Spawn angle
+
+FOV = 0.015
+Depth = 10.0
+
+mdir=0
+pi=3.14159
+
+gmap = load("newmap.jpg")
+
+
+
+start:
+
+clear(BLACK)
+
+pixi(gmap,50,50)
+dot(0,0,BLUE)
+
+box(-xsize/2, -ysize/2, xsize-1, ysize-1, GREEN)
+$ts=""
+sprintf( $ts, "angle=%.2f\nx=%.2f\ny=%.2f", playerA,playerX,playerY )
+print($ts,-50,85, WHITE)
+
+floornsky(#120717, #333F6A)
+
+$k=1
+while($k<25*2){
+  rayc(FOV*$k,$k,#00D8FF)  
+  //rayc(FOV*$k,$k+1,#00D8FF)
+  $k+1
+}
+
+$k=-1
+while($k>-25*2){
+  rayc(FOV*$k,$k,#00D8FF) 
+  //rayc(FOV*$k,$k-1,#00D8FF) 
+  $k-1
+}
+rayc(0,0,RED)
+dot(playerX,-playerY, #FF008F)
+
+
+frame()
+
+
+
+while (get_event()){
+    if EVT[ EVT_TYPE ] == EVT_QUIT { halt }
+    if EVT[ EVT_TYPE ] == EVT_MOUSEMOVE {
+      if (EVT[EVT_X]>mdir){playerA = playerA + 0.07}
+      if (EVT[EVT_X]<mdir){playerA = playerA - 0.07}
+      mdir = EVT[EVT_X]
+    }
+    if EVT[ EVT_KEY ] == 97 { //a
+        playerX = playerX + 0.2*sin(playerA-(pi/2))
+        playerY = playerY + 0.2*cos(playerA-(pi/2))
+    }  
+    if EVT[ EVT_KEY ] == 100 { //d
+        playerX = playerX + 0.2*sin(playerA+(pi/2))
+        playerY = playerY + 0.2*cos(playerA+(pi/2))
+    } 
+    if EVT[ EVT_KEY ] == 119 { //w
+        playerX = playerX + 0.2*sin(playerA)
+        playerY = playerY + 0.2*cos(playerA)
+    }
+
+    if EVT[ EVT_KEY ] == 115 { //s
+        playerX = playerX - 0.2*sin(playerA)
+        playerY = playerY - 0.2*cos(playerA)
+    }
+}
+
+go start
+
+fn paint(){
+    $i=0
+    while($i<10){
+      dot($i, 0, get_color($i*13,$i*13,$i*13)) 
+      $i+1
+    } 
+}
+
+fn rayc($f,$r,$c){
+    $i=0
+    $x = 0.5*sin(playerA+$f)
+    $y = 0.5*cos(playerA+$f)
+    while(gmap[playerX+$x,-playerY-$y]!=WHITE){
+        $i+1
+        $x = $x*1.0005
+        $y = $y*1.0005
+        if($i>20000){break}
+    }
+    $d=255-(0.3*($i/10))
+    line(playerX,-playerY,playerX+$x,-playerY-$y,$c)
+
+    //if($i<20000){
+    line($r,-50, $r, -70+(70-($i/200)), get_color($d,$d,$d) )
+    line($r,-50, $r, -30-(70-($i/200)), get_color($d,$d,$d) )
+    //line($r,-30-(70-($i/200)), $r, -99, #333F6A )
+    //line($r,-70+(70-($i/200)), $r, 0, #67336A )
+   // }
+}
+
+fn floornsky($c1,$c2){
+  $inc=1
+  $y=-50
+  $i=0
+  while ($i<45){
+    line(-49,$y-$i, 49, $y-$i, $c2 )
+    line(-49,$y+$i, 49, $y+$i, $c1 )
+    $i+1
+    $c1=get_color(get_red($c1)+$inc,get_green($c1)+$inc,get_blue($c1)+$inc)
+  }
+}

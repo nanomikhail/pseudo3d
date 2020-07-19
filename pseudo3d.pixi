@@ -1,0 +1,100 @@
+set_pixel_size(3)
+resize(get_screen(), 200, 200)
+
+mdir=0  // Some important variables
+pi=3.14159 //                     |
+gmap = load("map.jpg")//----------|
+
+playerX = 42.4      // Spawn x
+playerY = -54.3     // Spawn y
+playerA = -1.6      // Spawn angle
+
+FOV = 0.015         // Field of view
+Depth = 255         // Max view distance
+
+
+loop:    // Main loop ----------------------------------------------------------------------------|
+
+	clear(BLACK)             // Clear screen
+
+// ----------------------------Display interface ----------------------------------|
+	pixi(gmap,50,50)         
+	box(-100, -100, 199, 199, GREEN)
+	$t=""
+	sprintf( $t, "angle=%.2f\nx=%.2f\ny=%.2f", playerA,playerX,playerY )
+	print($t,-50,30, WHITE)  
+// ----------------------------Display interface ----------------------------------|
+
+	floornsky(#120717, #333F6A, 1) // Draw floor and sky
+
+// Draw scene by ray casting method---------------------------------|
+	$n=-50  
+	while($n<50){
+		rayc(FOV*$n,$n,#00D8FF)
+		$n+1
+	}
+	rayc(0,0,RED)
+	dot(playerX,-playerY, #13FF00)
+// Draw scene by ray casting method---------------------------------|
+
+	frame()
+
+	while (get_event()){
+		if EVT[EVT_TYPE] == EVT_QUIT { halt }                // Quit by pressing ESC
+		if EVT[EVT_TYPE] == EVT_MOUSEMOVE {                  // Rotating field of view when mouse moving left<->right
+			if (EVT[EVT_X] > mdir){playerA = playerA + 0.07}
+			if (EVT[EVT_X] < mdir){playerA = playerA - 0.07}
+			mdir = EVT[EVT_X]
+		}
+
+		if EVT[EVT_KEY] == 119 { // Press key w - move forward
+			playerX = playerX + 0.2*sin(playerA)
+			playerY = playerY + 0.2*cos(playerA)
+		}
+
+		if EVT[EVT_KEY] == 97 { // Press key a - move left
+			playerX = playerX + 0.2*sin(playerA-(pi/2))
+			playerY = playerY + 0.2*cos(playerA-(pi/2))
+		}
+
+		if EVT[EVT_KEY] == 115 { // Press key s - move back
+			playerX = playerX - 0.2*sin(playerA)
+			playerY = playerY - 0.2*cos(playerA)
+		}
+
+		if EVT[EVT_KEY] == 100 { // Press key d - move right
+			playerX = playerX + 0.2*sin(playerA+(pi/2))
+			playerY = playerY + 0.2*cos(playerA+(pi/2))
+		} 
+	}
+
+go loop  // Main loop ----------------------------------------------------------------------------|
+
+fn rayc($f,$r,$c){  // Ray casting function
+	$i=0
+	$x = 0.5*sin(playerA+$f)
+	$y = 0.5*cos(playerA+$f)
+	while(gmap[playerX+$x,-playerY-$y]!=WHITE){
+		$i+1
+		$x = $x*1.0005
+		$y = $y*1.0005
+		if($i>20000){break}
+	}
+
+	$shade=Depth-(0.3*($i/10))
+	line(playerX,-playerY,playerX+$x,-playerY-$y,$c)
+	if($i<20000){
+	  	line($r,-50, $r, -($i/200), get_color($shade,$shade,$shade) )
+	  	line($r,-50, $r, -100+($i/200), get_color($shade,$shade,$shade) )
+	}
+}
+
+fn floornsky($floor,$sky,$inc){  // Draw floor and sky function
+	$i=0
+	while ($i<45){
+		line(-50,-50-$i, 50, -50-$i, $sky )
+		line(-50,-50+$i, 50, -50+$i, $floor )
+		$i+1
+		$floor=get_color(get_red($floor)+$inc,get_green($floor)+$inc,get_blue($floor)+$inc)
+	}
+}
